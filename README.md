@@ -10,6 +10,9 @@ DeepSeek Harness (dsh) remote deployment package — platform-agnostic; runs on 
 
 ---
 
+
+> **Disclaimer**: This is a community project. Not affiliated with, endorsed by, or sponsored by DeepSeek AI. All trademarks belong to their respective owners.
+
 ## ⚠️ Security warning (read first)
 
 This package **unlocks dsh's privileged plane** (settings / credentials / model config),
