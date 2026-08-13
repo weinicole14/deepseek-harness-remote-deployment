@@ -1,0 +1,4 @@
+# 替换为你的域名；Caddy 自动申请/续期 Let's Encrypt 证书
+YOUR.DOMAIN.COM {
+    reverse_proxy nginx:80
+}
