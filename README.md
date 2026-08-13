@@ -2,11 +2,11 @@
 
 English | [中文](README.zh.md)
 
-DeepSeek Harness (dsh) remote deployment package — a production-grade Zeabur + nginx setup.
+DeepSeek Harness (dsh) remote deployment package — platform-agnostic; runs on any VPS or server capable of Docker.
 
 > **Target version**: dsh `0.1.0-rc.6` (release-day build, 2026-08-13)
-> **Form factor**: Zeabur dual-service (nginx edge + dsh backend) + persistent volume
-> **Verified on**: Zeabur Tokyo node (2C4G BYOS server)
+> **Form factor**: nginx edge + dsh backend (three containers: Caddy/nginx/dsh) + persistent volume
+> **Verified on**: Zeabur Tokyo node 2C4G (deployment path B)
 
 ---
 
@@ -30,21 +30,21 @@ This repository is a **deployment-layer solution** (zero dsh source changes) tha
 - Performance (gzip, immutable caching, Service Worker offline cache)
 - Remote deployment (dsh CLI rejects `--host 0.0.0.0`; solved via the Cordis patch config layer)
 
-## Architecture
+## Architecture (platform-agnostic)
 
 ```
-Phone/Browser ──HTTPS──> Zeabur Gateway
+Phone/Browser ──HTTPS──> TLS terminator (Caddy or platform gateway)
                           │
                           ▼
-                  nginx service (public domain)
+                  nginx edge (public entry)
                   ├─ Basic Auth (.htpasswd)
                   ├─ gzip / immutable cache / Service Worker
                   ├─ sub_filter: inject mobile CSS + SW registration
                   ├─ sub_filter: rewrite isLoopback (client-side unlock)
                   └─ /api/ rewrites Host/Origin to 127.0.0.1 (server-side unlock)
-                          │ internal http://dsh.zeabur.internal:3080
+                          │ internal network (Docker or platform)
                           ▼
-                  dsh service (no public domain)
+                  dsh backend (no public entry)
                   ├─ node:24 + @deepseek-ai/dsh
                   ├─ DSH_HOME=/data/dsh-home (persistent volume)
                   ├─ profile patch: webserver binds 0.0.0.0
@@ -55,58 +55,69 @@ Phone/Browser ──HTTPS──> Zeabur Gateway
 
 ```
 .
-├── README.md
-├── README.zh.md             # Chinese documentation
-├── compat-check.sh          # post-upgrade injection-point health check
+├── README.md / README.zh.md
+├── docker-compose.yml        # Path A: one-command deployment on any VPS
+├── Caddyfile                 # Automatic HTTPS (Let's Encrypt)
+├── compat-check.sh           # post-upgrade injection-point health check
 ├── nginx/
-│   ├── default.conf         # nginx edge config (all injection rules)
-│   └── sw.js                # Service Worker (plugin JS local cache)
+│   ├── default.conf          # nginx edge config (all injection rules)
+│   └── sw.js                 # Service Worker (plugin JS local cache)
 ├── css/
-│   └── mobile.css          # mobile adaptation CSS (version-bound, see pitfall #5)
+│   └── mobile.css           # mobile adaptation CSS (version-bound, see pitfall #5)
 └── dsh/
-    ├── startup.sh           # dsh container startup script
-    ├── cordis.patch.yml     # home-level patch (trustedHosts)
-    └── settings.yaml        # server-side settings (model/permission, hot-reload)
+    ├── startup.sh            # dsh startup script (auto-initializes config)
+    ├── cordis.patch.yml      # home-level patch (trustedHosts)
+    └── settings.yaml         # server-side settings (model/permission, hot-reload)
 ```
 
 ## Prerequisites
 
-- Zeabur account + one BYOS server (shared clusters are deprecated)
+- Any Linux server with Docker (bare metal also works, see below)
 - DeepSeek API key
-- A domain (optional; Zeabur generated domains work)
+- A domain + DNS record (Caddy auto-issues HTTPS)
 
 ## Deployment
 
-### Option A: Zeabur Dashboard (recommended for beginners)
+### Path A: Docker Compose (any VPS, recommended)
+
+```sh
+# 1. Credentials
+export DEEPSEEK_API_KEY=sk-xxx
+export PUBLIC_DOMAIN=your.domain.com
+
+# 2. Generate the htpasswd file
+htpasswd -nb admin <password> > nginx/.htpasswd
+
+# 3. Set your domain in Caddyfile
+sed -i 's/YOUR.DOMAIN.COM/your.domain.com/' Caddyfile
+
+# 4. Replace placeholder domains in dsh/cordis.patch.yml
+
+# 5. Start
+docker compose up -d
+```
+
+Notes:
+- The dsh service carries the network alias `dsh.zeabur.internal` so both deployment
+  paths share the same `nginx/default.conf`.
+- `./dsh` is mounted read-only as the config source; startup.sh initializes the home
+  patch and settings on first boot (idempotent).
+- Persistent data lives in the `dsh-data` volume; config is code, the repo is the backup.
+
+### Path B: Zeabur (platform-specific)
 
 1. Create a project (region = your server).
-2. **Service 1: dsh**
-   - Add service → Prebuilt → `node:24` (full image; slim lacks the build toolchain, see pitfall #1)
-   - Port: 3080 / HTTP
-   - Volume: `/data`
-   - Command: `sh`, Args: `-c` + the contents of `dsh/startup.sh`
-   - Env vars: `DEEPSEEK_API_KEY`, `PUBLIC_DOMAIN` (your nginx domain)
-   - Do NOT bind a public domain
-3. **Service 2: nginx**
-   - Add service → Prebuilt → `nginx:1.27-alpine`
-   - Port: 80 / HTTP
-   - Config file management: write `nginx/default.conf` and `nginx/sw.js`
-   - htpasswd: `htpasswd -nb admin <password>` → `/etc/nginx/.htpasswd`
-   - Bind the public domain (generated domains take a prefix only, see pitfall #3)
-4. In the dsh container, write `dsh/cordis.patch.yml` to `$DSH_HOME/cordis.patch.yml` and
-   `dsh/settings.yaml` to `$DSH_HOME/settings.yaml`.
-5. Restart both services and verify in a browser.
+2. Service 1: dsh — Prebuilt `node:24`, port 3080/HTTP, volume `/data`,
+   Command/Args = contents of `dsh/startup.sh`, env vars `DEEPSEEK_API_KEY` and
+   `PUBLIC_DOMAIN`, no public domain.
+3. Service 2: nginx — Prebuilt `nginx:1.27-alpine`, port 80/HTTP, write
+   `nginx/default.conf` and `nginx/sw.js` via config management, htpasswd to
+   `/etc/nginx/.htpasswd`, bind the public domain.
+4. Write the home patch and settings.yaml inside the dsh container (or via executeCommand).
+5. Restart both services and verify.
 
-### Option B: Zeabur GraphQL API (scripted)
-
-Key mutations (see Zeabur Open API docs):
-
-- `createProject(name, region)` — region is `server-<server-id>`
-- `createPrebuiltService(projectID, schema: ServiceSpecSchemaInput)`
-- `addDomain(serviceID, environmentID, domain, isGenerated)` — prefix only for generated domains
-- `createEnvironmentVariable(serviceID, environmentID, key, value)`
-- `updateServiceConfig(serviceID, environmentID, path, content, ...)` — write nginx config files
-- `executeCommand(serviceID, environmentID, command)` — run commands in the container
+> Zeabur specifics: generated domains take a prefix only; the domain MUST be bound to
+> the nginx service (see pitfall #3).
 
 ## Mobile UI adaptation details (css/mobile.css)
 
@@ -134,9 +145,8 @@ All fixes below are injected via nginx `sub_filter`; no dsh source code is modif
    lacks python/gcc. Use the full `node:24` image.
 2. **CLI rejects --host 0.0.0.0**: the webserver plugin config layer accepts `0.0.0.0`,
    but the CLI layer intentionally refuses it. Use the profile patch config layer.
-3. **Zeabur generated-domain rules**: `addDomain` takes a prefix only (e.g. `myapp`);
-   the system appends `.zeabur.app`. Passing a full domain returns DOMAIN_UNAVAILABLE.
-   The domain MUST be bound to the **nginx** service; binding it to dsh bypasses auth entirely.
+3. **(Zeabur only) Generated-domain rules**: `addDomain` takes a prefix only. The domain
+   MUST be bound to the **nginx** service; binding it to dsh bypasses auth entirely.
 4. **Startup script overwrites the profile patch**: the script rewrites the profile-level
    cordis.patch.yml on every boot. Put cross-restart customizations in the home-level
    `$DSH_HOME/cordis.patch.yml` (applied after the profile layer).
@@ -169,7 +179,7 @@ All fixes below are injected via nginx `sub_filter`; no dsh source code is modif
 This repository contains no real secrets. Fill in your own during deployment:
 
 - `.htpasswd`: generate with `htpasswd -nb admin <password>`
-- `DEEPSEEK_API_KEY`: Zeabur environment variable
+- `DEEPSEEK_API_KEY`: environment variable
 - `trustedHosts`: replace with your own domains
 
 ## License
