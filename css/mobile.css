@@ -1,0 +1,44 @@
+/* dsh 移动端适配 CSS（注入用）
+ * 适配版本：dsh 0.1.0-rc.6
+ * 注入方式：nginx sub_filter 在 </head> 前插入
+ * 警告：类名是 CSS Modules hash，升级 dsh 后可能失效，用 compat-check.sh 体检
+ */
+@media (max-width:768px){
+  /* 全局字号基准 */
+  html,body{font-size:15px;}
+
+  /* 设置面板：上下布局 + 导航横滚 + 内容滚动 */
+  .VOzbGW_panel{flex-direction:column !important;max-height:82vh !important;overflow:hidden !important;}
+  .VOzbGW_nav{width:100% !important;height:auto !important;flex-shrink:0 !important;}
+  .VOzbGW_navTitle{display:none !important;}
+  .VOzbGW_navList{flex-direction:row !important;flex-wrap:nowrap !important;overflow-x:auto !important;}
+  .VOzbGW_content{flex:1 !important;width:100% !important;min-width:100% !important;min-height:0 !important;overflow-y:auto !important;}
+
+  /* 输入区：防重叠 */
+  .uV2eYG_row{flex-wrap:wrap !important;}
+  .uV2eYG_trailing{flex-wrap:wrap !important;max-width:100% !important;}
+  ._7KE1Ra_trigger{max-width:100% !important;font-size:12px !important;overflow:hidden !important;text-overflow:ellipsis !important;white-space:nowrap !important;}
+  .uV2eYG_add,.uV2eYG_primary{flex-shrink:0 !important;}
+
+  /* 弹窗避开左侧栏 */
+  ._7KE1Ra_menu{left:0 !important;max-width:calc(100vw - 80px) !important;z-index:1000 !important;}
+  .JObwrW_panel{position:absolute !important;left:-206px !important;right:auto !important;top:auto !important;width:264px !important;z-index:1000 !important;}
+
+  /* AI 回复正文 */
+  ._markdown_1nba0_5,.Sxvs8a_body,.Sxvs8a_root{font-size:11.5px !important;line-height:1.5 !important;}
+
+  /* token/耗时信息：多行换行 + 小字号 */
+  .FJxK0a_root{white-space:normal !important;flex-wrap:wrap !important;font-size:9px !important;line-height:1.4 !important;}
+  .FJxK0a_root span{white-space:normal !important;}
+  .p-xYUq_actions{flex-wrap:wrap !important;max-width:100% !important;}
+  .p-xYUq_timeStart{font-size:11px !important;}
+  .p-xYUq_timeEnd{white-space:normal !important;font-size:10px !important;max-width:100% !important;word-break:break-all !important;}
+
+  /* 对话页禁横滑；轨迹页条形图可横滑 */
+  .wSkVaW_scrollBody{overflow-x:hidden !important;}
+  .Md3f7G_scroll{overflow-x:hidden !important;}
+  ._1p9O6q_plot{flex-wrap:wrap !important;overflow-x:auto !important;}
+  ._1p9O6q_labels{width:100% !important;flex-wrap:wrap !important;}
+  ._1p9O6q_track{width:100% !important;max-width:100% !important;}
+  .wSkVaW_header{flex-wrap:wrap !important;}
+}
