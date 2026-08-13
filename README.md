@@ -10,6 +10,26 @@ DeepSeek Harness (dsh) remote deployment package — platform-agnostic; runs on 
 
 ---
 
+## ⚠️ Security warning (read first)
+
+This package **unlocks dsh's privileged plane** (settings / credentials / model config),
+which the official build deliberately locks to loopback until a real authentication layer
+exists. By using this package you accept the following:
+
+- **Basic Auth is your ONLY security boundary.** No rate limiting, no audit log, no MFA.
+  A weak or leaked password means the attacker gets **agent execution power on your server**
+  (shell-equivalent).
+- **Anyone who passes auth can modify system configuration and read credential state.**
+- **Recommended for personal/self-use only.** For multi-user or production exposure, add
+  stronger auth (OAuth2/SSO, IP allowlists, fail2ban) in front of nginx.
+- **dsh is in developer preview**; expect breaking changes and unknown vulnerabilities.
+  You expose it to the internet at your own risk.
+
+Never bind the dsh backend to a public domain, never use a default password, and never
+share the APK if it embeds credentials.
+
+---
+
 > **Core highlight: mobile UI adaptation** — dsh's official frontend is desktop-first and breaks
 > badly on narrow screens. This package injects CSS via nginx to deliver 20+ mobile fixes.
 > See *Mobile UI adaptation details* below.
