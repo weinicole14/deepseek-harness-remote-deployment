@@ -1,0 +1,10 @@
+# home 级 patch（$DSH_HOME/cordis.patch.yml）
+# 应用顺序：bundles -> profile patch -> home patch -> --patch overlay
+# 用途：trustedHosts 信任名单（把两个域名换成你自己的）
+- id: web-runtime
+  config:
+    printUrl: true
+    surfaceContext: true
+    trustedHosts:
+      - YOUR-DOMAIN-1.zeabur.app
+      - YOUR-DOMAIN-2.zeabur.app
