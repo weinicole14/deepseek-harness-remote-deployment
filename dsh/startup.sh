@@ -25,6 +25,12 @@ if [ ! -f "$DSH_HOME/profiles/web/cordis.patch.yml" ]; then
   sleep 1
 fi
 
+# 从挂载目录初始化配置文件（幂等，首次复制后可由用户就地修改）
+if [ -d /opt/dsh-config ]; then
+  mkdir -p "$DSH_HOME"
+  [ -f "$DSH_HOME/cordis.patch.yml" ] || [ ! -f /opt/dsh-config/cordis.patch.yml ] || cp /opt/dsh-config/cordis.patch.yml "$DSH_HOME/cordis.patch.yml"
+  [ -f "$DSH_HOME/settings.yaml" ] || [ ! -f /opt/dsh-config/settings.yaml ] || cp /opt/dsh-config/settings.yaml "$DSH_HOME/settings.yaml"
+fi
 # 注意：此脚本每次启动都会覆盖 profile 级 patch。
 # 需要跨重启的定制（如 trustedHosts）请放在 home 级 $DSH_HOME/cordis.patch.yml
 cat > "$DSH_HOME/profiles/web/cordis.patch.yml" <<'PATCH'
