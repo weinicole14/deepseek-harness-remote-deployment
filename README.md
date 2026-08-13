@@ -8,17 +8,20 @@ DeepSeek Harness (dsh) 远程部署包 —— 基于 Zeabur + nginx 的生产级
 
 ---
 
+> **核心亮点：移动端 UI 适配** —— dsh 官方前端是桌面优先设计，窄屏下多处布局崩塌。
+> 本方案通过 nginx 注入 CSS 完成 20+ 项适配修复，详见下文《移动端 UI 适配明细》。
+
 ## 这是什么
 
 [dsh](https://github.com/deepseek-ai/deepseek-harness) 是 DeepSeek AI 开源的 agent harness（智能体框架）。官方 v1 明确将部署加固（TLS、鉴权）列为 out-of-scope，且设置/凭据等特权 API 被硬锁在 loopback。
 
 本仓库是一套**部署层方案**（不修改任何 dsh 源码），解决：
 
-- 远程部署（dsh CLI 拒绝 `--host 0.0.0.0`，通过 Cordis patch 配置层解决）
-- 安全暴露（nginx Basic Auth 充当官方等待的认证层）
+- **移动端 UI 适配**（核心）—— 20+ 项修复：设置面板纵向布局与滚动、弹窗避让侧栏、composer 防重叠、字号体系、token 信息换行、轨迹页图表全宽、对话页禁横滑
 - 特权平面解锁（设置页/模型配置/凭据在远程浏览器可用）
+- 安全暴露（nginx Basic Auth 充当官方等待的认证层）
 - 性能（gzip、immutable 缓存、Service Worker 离线缓存）
-- 移动端适配（设置面板、弹窗、composer、字体、溢出修复）
+- 远程部署（dsh CLI 拒绝 `--host 0.0.0.0`，通过 Cordis patch 配置层解决）
 
 ## 架构
 
@@ -97,6 +100,26 @@ DeepSeek Harness (dsh) 远程部署包 —— 基于 Zeabur + nginx 的生产级
 - `executeCommand(serviceID, environmentID, command)` — 容器内执行命令
 
 本方案部署时的完整调用序列与参数见仓库 git 历史（部署过程记录）。
+
+## 移动端 UI 适配明细（css/mobile.css）
+
+以下修复全部通过 nginx `sub_filter` 注入 CSS 实现，不修改 dsh 源码。
+
+| 区域 | 问题 | 修复 |
+|---|---|---|
+| 设置面板 | 左右分栏在窄屏挤压（右侧仅 127px） | 改纵向布局，导航横滚，内容区独立滚动 |
+| 设置面板 | 内容溢出无法滚动 | `max-height:82vh + overflow-y:auto` |
+| 设置面板 | 导航条撑满面板 | 导航条自适应高度 + 内容区 `flex:1` |
+| 模型/上下文弹窗 | 被左侧 56px 侧栏遮挡 | 模型弹窗 `left:0`；上下文弹窗 `left:-206px`（避开侧栏） |
+| 底部 composer | 命令/模型/思考强度按钮叠在一起 | `flex-wrap` 允许换行，模型按钮省略号截断 |
+| AI 回复正文 | 字号偏大 | 11.5px（可调） |
+| 消息元信息（用时/tok/s） | nowrap 撑到 361px 溢出屏幕 | 多行换行 + 10px |
+| 底部 token 状态栏 | 672px 内容挤在 267px 容器 | 多行换行 + 9px |
+| 对话页 | 被超宽元素带出横向滚动 | `overflow-x:hidden` 锁死 |
+| 轨迹页条形图 | 图例+条形并排贴边，窄屏被裁 | 图例独占一行全宽 + 条形全宽 |
+| 全局 | 字体基准 16px 偏大 | `html,body` 15px |
+
+> 注意：类名是 CSS Modules hash（版本绑定）。升级 dsh 后跑 `compat-check.sh` 体检。
 
 ## 踩坑记录（重要）
 
