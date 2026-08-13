@@ -108,6 +108,13 @@ docker compose up -d
 
 > Zeabur 特有注意：生成域名只传前缀；域名必须绑在 nginx 服务上（见踩坑#3）。
 
+## 截图展示
+
+<p align="center">
+  <img src="docs/screenshots/01-chat-view.jpg" width="32%" alt="对话视图"/>
+  <img src="docs/screenshots/02-trajectory-view.jpg" width="32%" alt="轨迹视图"/>
+</p>
+
 ## 移动端 UI 适配明细（css/mobile.css）
 
 以下修复全部通过 nginx `sub_filter` 注入 CSS 实现，不修改 dsh 源码。
