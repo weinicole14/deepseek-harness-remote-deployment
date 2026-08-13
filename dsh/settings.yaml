@@ -1,0 +1,10 @@
+# dsh 服务端设置（$DSH_HOME/settings.yaml，热加载）
+# 远程部署时设置页 UI 只读，模型/权限配置写在这里
+llm-deepseek:
+  apiKeyEnv: DEEPSEEK_API_KEY
+agent-default-model:
+  provider: deepseek-official
+  model: deepseek-v4-flash
+  reasoningEffort: max
+permission:
+  defaultPreset: danger-full-access
