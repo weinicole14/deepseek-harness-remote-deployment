@@ -141,10 +141,11 @@ Notes:
 
 ## Screenshots
 
-<p align="center">
-  <img src="docs/screenshots/01-chat-view.jpg" width="32%" alt="Chat view"/>
-  <img src="docs/screenshots/02-trajectory-view.jpg" width="32%" alt="Trajectory view"/>
-</p>
+![Chat view](docs/screenshots/01-chat-view.jpg)
+
+![Trajectory view](docs/screenshots/02-trajectory-view.jpg)
+
+
 
 ## Mobile UI adaptation details (css/mobile.css)
 
