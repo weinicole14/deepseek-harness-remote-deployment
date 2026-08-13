@@ -126,10 +126,11 @@ docker compose up -d
 
 ## 截图展示
 
-<p align="center">
-  <img src="docs/screenshots/01-chat-view.jpg" width="32%" alt="对话视图"/>
-  <img src="docs/screenshots/02-trajectory-view.jpg" width="32%" alt="轨迹视图"/>
-</p>
+![对话视图](docs/screenshots/01-chat-view.jpg)
+
+![轨迹视图](docs/screenshots/02-trajectory-view.jpg)
+
+
 
 ## 移动端 UI 适配明细（css/mobile.css）
 
