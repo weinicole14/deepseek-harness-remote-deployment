@@ -119,6 +119,13 @@ Notes:
 > Zeabur specifics: generated domains take a prefix only; the domain MUST be bound to
 > the nginx service (see pitfall #3).
 
+## Screenshots
+
+<p align="center">
+  <img src="docs/screenshots/01-chat-view.jpg" width="32%" alt="Chat view"/>
+  <img src="docs/screenshots/02-trajectory-view.jpg" width="32%" alt="Trajectory view"/>
+</p>
+
 ## Mobile UI adaptation details (css/mobile.css)
 
 All fixes below are injected via nginx `sub_filter`; no dsh source code is modified.
