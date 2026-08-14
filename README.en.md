@@ -45,6 +45,9 @@ and locks the privileged plane (settings/credentials/presets) to loopback.
 
 This repository is a **deployment-layer solution** (zero dsh source changes) that provides:
 
+- **Zero source-code changes** — not a single line of dsh code is touched; everything
+  lives in the deployment layer (Cordis patches / nginx sub_filter), so upgrading
+  upstream never requires re-patching
 - **Mobile UI adaptation** (core) — 20+ fixes: vertical settings layout with scrolling,
   popovers avoiding the side rail, composer wrap, font scale, token-line wrapping,
   full-width trajectory chart, locked chat viewport
